@@ -1,22 +1,28 @@
 # BotW-Native + Zelda-on-PC keyboard/mouse port
 
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
-prompts, mouse menus) into this BotW-Native checkout. Phases 0–8 and map wheel zoom are done, committed and pushed;
-phase 9 is done and verified but not committed (see the status list at the bottom). Next: phase 10.
+prompts, mouse menus) into this BotW-Native checkout.
+
+**Where we are (2026-11-19):** phases 0–9 + map wheel zoom are done, play-tested, committed and pushed. Phase 10
+(Motion Control) is built and committed locally but NOT play-tested and NOT pushed: the user launched it but has
+not reported back yet. Start a new chat by asking how Motion Control went (checks: bow/scope + T + mouse moves the
+aim via gyro; a tilt-maze shrine; camera/scope/weapon wheel normal after T again). Then push, then phase 11.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
   Remotes: `origin` = the user's fork CodeCraftPlugin/BotW-Native, `upstream` = ryderclanky (push disabled).
-  Work branch `pc-controls` (tracks origin/pc-controls); `main` stays equal to upstream. Two commits so far:
-  the port (38485b2) and a local-notes commit (CLAUDE.md + tools/pce) to leave out of any PR to upstream.
-  Commit/push only when the user asks. PR later: `gh pr create --repo ryderclanky/BotW-Native --base main
+  Work branch `pc-controls` (tracks origin/pc-controls); `main` stays equal to upstream. Commits alternate
+  between code commits (the port 38485b2, then one per phase) and "Notes: ..." commits that only touch CLAUDE.md /
+  tools/pce: leave the notes commits out of any PR to upstream. Commit/push only when the user asks (they
+  usually say "commit and push" after a phase is verified; keep code and notes in separate commits). PR later: `gh pr create --repo ryderclanky/BotW-Native --base main
   --head CodeCraftPlugin:<branch>` from a branch without the notes commit. Update: `git fetch upstream` +
   `git rebase upstream/main`. `BotWRecomp/` in the repo root is a stray user folder from shell launches
   without APPDATA (excluded in .git/info/exclude); leave it alone.
 - Reference: https://github.com/mircea32000/Zelda-on-PC (MPL-2.0, Cemu fork). Port source is
   `src/pcedition/` (PCInput.cpp ~2.7k lines, PCCamera, PCPrompts, PCMenus, PCUI, PCKeys, PCGraphics.cpp holds the
-  asm patches `[BotWPCE_MouseCamera]` / `[BotWPCE_UI]`). A sparse clone may exist in an old session scratchpad;
-  re-clone into the scratchpad if needed (`git clone --filter=blob:none --sparse`, then `sparse-checkout set
+  asm patches `[BotWPCE_MouseCamera]` / `[BotWPCE_UI]`). Last sparse clone (src/pcedition, incl. PCGraphics.cpp):
+  `C:\Users\CODECR~1\AppData\Local\Temp\claude\195f6e35e45c96ac\25d0c97d-2dba-49ac-9ae3-c9b785233e56\scratchpad\zrepo`
+  (temp, may be gone); re-clone into the current scratchpad if needed (`git clone --filter=blob:none --sparse`, then `sparse-checkout set
   src/pcedition bin/resources/pcedition`). Put the MPL notice on any file derived from it.
 - Game (v1.5.0 / v208, USA + DLC): `D:\Games\Netendo\Decrepted\Combined\BotW-Native game`
   (U-King.rpx sha256 ba58da5b...34d30, matches). Never copy files out of it (generated, modified copies in the
@@ -81,6 +87,10 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   U+E040.. mapped to the bound keys, plus the grown RSTB entry, into `%APPDATA%\BotWRecomp\pc_prompts\`;
   served ahead of mods by `mods::set_private_override()` (coreinit/mods.cpp) — deliberately NOT the mods
   folder, so the shared v0.1.2 release does not load it. Cached by a stamp file.
+- `runtime/src/game/pc_ui.cpp` (MPL) — start of the [BotWPCE_UI] port: world map screen hook 0x02F033E0 ->
+  `pce_map_screen()` (map wheel zoom). Phase 11 adds the other UI hooks here.
+- `runtime/src/input/pc_tilt.{h,cpp}` (MPL) — Motion Control pose (phase 10); `input/motion.cpp`
+  `virtual_motion()` turns it into VPAD motion through its own fusion; `pad_hle.cpp` prefers it while reported.
 - Also touched: `host/window.cpp` (mouse events, pc_controls apply/keys/F1, manual stick), `input/pad_hle.cpp`
   (frame()), `settings.{h,cpp}` (mouse_camera, mouse_sens, mouse_sens_y, mouse_sens_aim, mouse_invert_x/y in settings.ini; logs
   frame-rate changes), `main.cpp` (pcprompts::prepare after mods::init), `coreinit/fs.cpp` (FS log),
@@ -110,11 +120,21 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
 9 Shield surf (0x02BE8B30, pitch 0x02BE8EF8, yaw 0x02BE9698), sand seal (0x02BF5ACC, 0x02BF5E80, 0x02BF65E8),
   waterfall (0x02BF8F88, yaw 0x02BF914C), Magnesis held object (action 0x020D72D0, camera rig 0x02BF02A8, object
   lead 0x02BD8AB8, distance fix 0x020D6DB0; follow speed 360 deg/s / 40 m/s like Zelda-on-PC) — DONE (user: "all working
-  fine"; not committed yet). magnet_active() = Magnesis action ticked <100 ms ago (the lock-on hook then skips). All player
+  fine"; camera log verified too). magnet_active() = Magnesis action ticked <100 ms ago (the lock-on hook then skips). All player
   cameras now have mouse support; the phase-1 "timestamp only" entry hooks are gone.
-10 Motion shrines (Sonnet): TiltMode/TiltLevel (bindings exist, marked "not yet").
+10 Motion Control — BUILT, awaiting play-test. T toggles (tilt_toggle=0: hold); the mouse tilts a virtual
+  GamePad, wheel = turn flat (15 deg/notch), middle click = level (Scope is suppressed for that key while on).
+  `runtime/src/input/pc_tilt.{h,cpp}` (MPL) = Zelda-on-PC's pose logic (world_rotation, level_by, spring follow);
+  `input::virtual_motion()` in motion.cpp runs the pose through its own copy of the Mahony fusion (bias learning
+  off), pad_hle uses `pccontrols::tilt_motion()` ahead of the controller gyro. While on: cameras leave the mouse
+  alone (feed() returns), selectors are off, mouse buttons work even outside a known camera. Off: levels at
+  400 deg/s, then hands motion back. Settings tilt_* in pc_controls.ini (defaults used when the keys are missing;
+  existing user files do not have them). Log: "pc controls: motion control on/off".
 11 Mouse in menus (Opus): port [BotWPCE_UI] hooks + PCMenus/PCUI; Journal shortcut; context prompts; replaces
-  the interim menu rules (mouse buttons inert, wheel = category flick); action ring.
+  the interim menu rules (mouse buttons inert, wheel = category flick); action ring. Keep the map wheel zoom
+  (pc_ui.cpp) working. Zelda-on-PC: PCUI.cpp (HLE_UIScreen/UIText, ScreenVisible), PCMenus.cpp (map: wheel zoom,
+  drag; inventory clicks), PCGraphics.cpp lines ~600–740 (the [BotWPCE_UI] patch list).
+  Still untested from phase 5: bow selector (2) and arrow wheel while aiming (ask whether the user has a bow now).
 12 Settings screen (Sonnet): mouse sensitivity/invert + bindings in the F1 overlay menu.
 
 ## Known issues not caused by the port (don't chase without being asked)
