@@ -3,11 +3,9 @@
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
 prompts, mouse menus) into this BotW-Native checkout.
 
-**Where we are (2026-11-20):** phases 0–10 + map wheel zoom done and pushed. Phase 11 pushed; second play-test:
-Keys tab works (user: "yes it does"). Follow-ups built and committed (not pushed, NOT play-tested yet): F1 Keys tab
-wider name column + mouse wheel scrolls the F1 menu; Esc = new action "System" (in play opens the pause menu on the
-System page, elsewhere B). Next session: ask how those tested (and the rest of the phase 11 checklist: menu
-hover/click/right click, Sort = C, action ring keys), then fix / push.
+**Where we are (2026-11-20):** phases 0–11 done. Phase 11 verified by the user ("phase 11 checks are done they
+work"), incl. the follow-ups (F1 wider Keys names + wheel scroll, Esc = System). Follow-up commit 40408b0 not pushed
+yet. Next: push, then phase 11 extras (context prompts, save/load macros, F2 pointer) or phase 12.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
