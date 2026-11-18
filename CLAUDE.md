@@ -155,8 +155,9 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
 
 ## Known issues not caused by the port (don't chase without being asked)
 - Title-screen "Continue" menu stalls ~1.4–2 s when opened: same with PC prompts on and off (A/B checked).
-- Blurry text at the second Shrine of Resurrection terminal: render settings are native (1.5x of 720p on a
-  1080p display); user was asked to compare with v0.1.2, no answer yet.
+- Blurry text at the Shrine of Resurrection terminals (the blue "Sheikah Slate ..." line shows only as a glow;
+  seen again 2026-11-19 with the phase 11 build). Render settings are native (1.5x of 720p on a 1080p display).
+  The user was asked to compare with v0.1.2 and with BOTW_PCE_NO_PROMPTS=1; no answer yet. Not chased unless asked.
 - The F1 overlay's top row is Frame rate; Left/Right flips 30/60 fps (settings log now records changes).
 
 ## Working with this user
