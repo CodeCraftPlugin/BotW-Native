@@ -1,8 +1,8 @@
 # BotW-Native + Zelda-on-PC keyboard/mouse port
 
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
-prompts, mouse menus) into this BotW-Native checkout. Phases 0–8 are done, plus map wheel zoom (both verified, not
-committed yet; see the status list at the bottom). Next: phase 9.
+prompts, mouse menus) into this BotW-Native checkout. Phases 0–8 and map wheel zoom are done, committed and pushed;
+phase 9 is done and verified but not committed (see the status list at the bottom). Next: phase 10.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -43,7 +43,8 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   starts a NEW GAME. Always set BOTW_USER_ROOT (the scripts do).
 - Do not drive the game with `--script` input for tests: getting to the title menu needs an intro/cutscene,
   and blind presses risk starting a new game (which can overwrite saves). Ask the user to play-test instead.
-- Debug env: BOTW_PCE_INPUT_LOG=1 (action presses, selector open/close, gameplay camera on/off; run.sh sets
+- Debug env: BOTW_PCE_INPUT_LOG=1 (action presses, selector open/close, gameplay camera on/off, and
+  "pce camera: <names>" whenever the set of mouse-driven cameras updated in the last 150 ms changes; run.sh sets
   it), BOTW_PCE_MOUSE_LOG=1 (1 s mouse summaries), BOTW_PCE_SPIN=<deg/frame> (spins main camera),
   BOTW_PCE_NO_PROMPTS=1 (GamePad prompts), BOTW_PCE_FS_LOG=1 (logs Font/RSTB file opens).
 - Disassemble guest code: `python -I tools/dis.py "<game>/code/U-King.rpx" <hex addr> [count]` (MSYS shell).
@@ -64,8 +65,8 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
 ## Port: files and what they do
 - `runtime/src/game/pc_camera.cpp` — main camera mouse (yaw 0x02B9C950; pitch via the game's own mapping
   0x02B96758 at 0x02B9C120, added at 0x02B9C188/0x02B9C1AC), stick suppression while a selector is open
-  (0x02B9C950, 0x02B9C184), aim/camera-rune/lock-on mouse (phase 7), entry tick hooks of the
-  remaining cameras (only timestamps so far; phases 8–9 add their rotation there), `pce_gameplay_camera()`, `pce_bow_camera()`.
+  (0x02B9C950, 0x02B9C184), mouse for every other player camera (phases 7–9: aim, camera rune,
+  lock-on, climbing, conversation, horse, Master Cycle, surf, sand seal, waterfall, Magnesis), `pce_gameplay_camera()`, `pce_bow_camera()`.
 - `runtime/src/input/mouse.{h,cpp}` — SDL3 relative-mode capture (focused, no F1 menu / on-screen keyboard),
   `take()` motion (camera), `take_wheel()`/`take_pressed()` (bindings), manual-mode stick nudge (0.0062 for
   120 ms after mouse motion so the game stays in manual camera mode).
@@ -97,7 +98,7 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   layout images, not font -> look at it in phase 11 with the UI hooks. Inventory wheel = categories verified.
 7 Aim cameras + lock-on + camera rune — DONE (user: "everything seems to work"): scope/bow (0x02B9250C,
   0x02B92848, 0x02B92A48), rune aim (0x02B94E30, 0x02B95278, 0x02B956B0), camera rune (0x02BCED3C, 0x02BCF698),
-  lock-on (0x02BF0234, skipped while Magnesis 0x020D72D0 ticked <50 ms ago). Every camera with mouse support calls
+  lock-on (0x02BF0234, skipped while Magnesis 0x020D72D0 ticked <100 ms ago). Every camera with mouse support calls
   `feed()` at its entry (pc_camera.cpp); new settings.ini key mouse_sens_aim=0.8 (zoomed cameras).
 8 Climbing 0x02BEE0F8 + conversation 0x02BCB3A0 (orbit_tick: angles), horse 0x02BD2A44 + Master Cycle 0x02BDFB20
   (mount_tick: turn_eye) — DONE (user play-tested; only issue was map zoom, below). The conversation camera feeds
@@ -106,10 +107,11 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   0x02F033E0 (Zelda-on-PC PCE_MapObj) -> `pce_map_screen()`; while it is shown the wheel holds the right stick
   up/down ~167 ms per notch (max 4) instead of the category flick. Input log prints "world map shown/gone".
   Verified by the user ("yes it works").
-9 Other camera modes (Opus) — NEXT after 8. Hooks + HLE behaviour per docs/pc_hooks.md and Zelda-on-PC
-  PCInput.cpp HLE_Surf* / HLE_Magnet* (~lines 760–1030); give each camera a feed() call:
-  shield surf 0x02BE8B30, sand seal 0x02BF5ACC, waterfall 0x02BF8F88, Magnesis 0x020D72D0 (+ 0x02BF02A8,
-  0x02BD8AB8, 0x020D6DB0). Main camera already drops pending mouse motion when another camera runs.
+9 Shield surf (0x02BE8B30, pitch 0x02BE8EF8, yaw 0x02BE9698), sand seal (0x02BF5ACC, 0x02BF5E80, 0x02BF65E8),
+  waterfall (0x02BF8F88, yaw 0x02BF914C), Magnesis held object (action 0x020D72D0, camera rig 0x02BF02A8, object
+  lead 0x02BD8AB8, distance fix 0x020D6DB0; follow speed 360 deg/s / 40 m/s like Zelda-on-PC) — DONE (user: "all working
+  fine"; not committed yet). magnet_active() = Magnesis action ticked <100 ms ago (the lock-on hook then skips). All player
+  cameras now have mouse support; the phase-1 "timestamp only" entry hooks are gone.
 10 Motion shrines (Sonnet): TiltMode/TiltLevel (bindings exist, marked "not yet").
 11 Mouse in menus (Opus): port [BotWPCE_UI] hooks + PCMenus/PCUI; Journal shortcut; context prompts; replaces
   the interim menu rules (mouse buttons inert, wheel = category flick); action ring.
