@@ -39,7 +39,10 @@ go, swim Shift dash, cutscene E skip, Q+LMB parry. Commit code and notes separat
   Work branch `pc-controls` (tracks origin/pc-controls); `main` stays equal to upstream. Commits alternate
   between code commits (the port 38485b2, then one per phase) and "Notes: ..." commits that only touch CLAUDE.md /
   tools/pce: leave the notes commits out of any PR to upstream. Commit/push only when the user asks (they
-  usually say "commit and push" after a phase is verified; keep code and notes in separate commits). PR later: `gh pr create --repo ryderclanky/BotW-Native --base main
+  usually say "commit and push" after a phase is verified; keep code and notes in separate commits).
+  PR OPENED 2026-11-20: https://github.com/ryderclanky/BotW-Native/pull/35 from branch `pc-controls-pr` =
+  upstream/main + the code/README commits cherry-picked (no Notes commits, no 0a95586). Further code fixes: commit on
+  pc-controls, then cherry-pick onto pc-controls-pr and push it. How it was made: `gh pr create --repo ryderclanky/BotW-Native --base main
   --head CodeCraftPlugin:<branch>` from a branch without the notes commit. Update: `git fetch upstream` +
   `git rebase upstream/main`. `BotWRecomp/` in the repo root is a stray user folder from shell launches
   without APPDATA (excluded in .git/info/exclude); leave it alone.
