@@ -3,9 +3,35 @@
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
 prompts, mouse menus) into this BotW-Native checkout.
 
-**Where we are (2026-11-20):** phases 0–11 done. Phase 11 verified by the user ("phase 11 checks are done they
-work"), incl. the follow-ups (F1 wider Keys names + wheel scroll, Esc = System). Follow-up commit 40408b0 not pushed
-yet. Next: push, then phase 11 extras (context prompts, save/load macros, F2 pointer) or phase 12.
+**Where we are (2026-11-20):** phases 0–12 done and pushed (12 = F1 Controls tab mouse rows, user: "works").
+Now on the phase 11 extras. Handover (session ended 2026-11-19 ~03:40, for the next model): everything below is
+BUILT (build/BotWRecomp.exe 03:35:44) but UNCOMMITTED; the user commits only on "commit and push" (code and notes
+separate). State: (a) context controls: VERIFIED on the current build (2026-11-20: Magnesis wheel, scope zoom, "rest works";
+not every rune unlocked yet). Options arrows: VERIFIED (option rows have no arrow panes; a click on the outer 13% of
+the value box = d-pad left/right, pc_menus.cpp). Hold/Toggle rows in F1 Controls (Motion Control T, Walk, Sprint;
+tilt/walk/sprint_toggle in pc_controls.ini; T default now Hold, user's ini set to 0): VERIFIED (user: "works"). (b) Bow wheel zoom was tried (wheel -> right-stick click while a bow is
+drawn) and REVERTED at the user's request ("not natural"): the wheel steps arrows while aiming, as in Zelda-on-PC;
+do not retry. Bow selector (2) / arrow wheel still untested. (c) NEW, UNTESTED: Options screen "<" / ">" arrows did
+not step the value on click. Fix written: pc_ui.cpp walk_layout records panes whose name contains "ArrowL"/"ArrowR"
+inside a part (PartInfo.opt_arrow, Target.has_arrow/arrow); pc_menus.cpp click handler presses d-pad left/right
+(g_pending_btn) when the click is on such an arrow, else A. The pane names are a GUESS (layout never inspected). If
+it still fails, ask the user to click an arrow and read the log line "pc menus: click part hit=[..] mouse=(..)
+arrows=<LR flags> -> left/right/A": arrows=00 means the names are wrong (then dump the pane names of the Options
+rows, or fall back to a click-position split of the row's hit rect: left/right ends). Files: game/pc_ui.{h,cpp} (State::guides /
+action_a / has / has_button / button_for / held_items; add_guide() = Zelda-on-PC PCUI.cpp guide parsing:
+T_GuideA_ / T_Guide<BXYL>_ / T_Guide_ + sibling T_Icon_ glyph / T_A_ T_B_ T_BX_) and input/pc_controls.cpp
+(context() before the selectors in frame(): Skip, swim Dash, Let go, Throw, Drop/Put away, rune Cancel/activate,
+Detonate, Magnesis wheel push/pull, scope/camera click/quit/wheel zoom, parry Q+LMB; Out.remove repeats the
+removal on sampling reads; Remap.frames keeps a click's 50 ms pulse remapped; latch keeps the old button off
+until key release). Log (INPUT_LOG): "pc ui: guides [...]", "pc controls: context <names>".
+Bow selector (2) / arrow wheel: VERIFIED. VERIFIED (user tested 2026-11-20): paraglider close with Jump
+(BOTW_HOOK(0x02cb7004) in pc_camera.cpp -> pce_gliding(); pc_controls context() remaps a new Jump press to B, log
+"close paraglider"; hook addresses must be lowercase hex or the link fails) and Save/Load keys (actions SaveMenu F5 /
+LoadMenu F9, pc_menus update_macro = Zelda-on-PC UpdateMacro: pause menu on System page, confirm the "Save"/"Load"
+button; the game still asks; log "pc menus: Save key"). F2 GamePad view pointer mapping: dropped (user: not needed).
+Test list for the user: throw a bomb (LMB), held materials (LMB drop, RMB put away), Stasis/Cryonis (LMB activate,
+RMB cancel), remote bomb RMB detonates, Magnesis wheel push/pull, scope/camera LMB/RMB/wheel zoom, climbing E lets
+go, swim Shift dash, cutscene E skip, Q+LMB parry. Commit code and notes separately when verified.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -33,7 +59,9 @@ yet. Next: push, then phase 11 extras (context prompts, save/load macros, F2 poi
 
 ## Build and run (MSYS2 at D:\Apps\msys64, not on PATH)
 The user wants to watch builds and runs live: run them in a Terminal panel tab (run_in_terminal), not hidden
-in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
+in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly). They are machine-independent: this
+machine's paths live in the untracked `tools/pce/local.env` (template local.env.example); msys.ps1 finds MSYS2 via
+MSYS2_ROOT or C:\msys64 / D:\msys64 / D:\Apps\msys64:
 ```
 & .\tools\pce\msys.ps1 build_run         # incremental build, launches only if it succeeded
 & .\tools\pce\msys.ps1 recompile_build   # after adding/removing a BOTW_HOOK (recompile ~70 s + build)
