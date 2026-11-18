@@ -1,8 +1,8 @@
 # BotW-Native + Zelda-on-PC keyboard/mouse port
 
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
-prompts, mouse menus) into this BotW-Native checkout. Phases 0–7 are done (see the status list at the bottom);
-next up is phase 8. Phase 7 is not committed yet.
+prompts, mouse menus) into this BotW-Native checkout. Phases 0–8 are done, plus map wheel zoom (both verified, not
+committed yet; see the status list at the bottom). Next: phase 9.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -99,10 +99,16 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   0x02B92848, 0x02B92A48), rune aim (0x02B94E30, 0x02B95278, 0x02B956B0), camera rune (0x02BCED3C, 0x02BCF698),
   lock-on (0x02BF0234, skipped while Magnesis 0x020D72D0 ticked <50 ms ago). Every camera with mouse support calls
   `feed()` at its entry (pc_camera.cpp); new settings.ini key mouse_sens_aim=0.8 (zoomed cameras).
-8–9 Other camera modes (Opus) — NEXT. Hooks + HLE behaviour per docs/pc_hooks.md and Zelda-on-PC
-  PCInput.cpp HLE_*CamTick / HLE_Surf* / HLE_Magnet* (~lines 480–1060); give each camera a feed() call. Batches:
-  8 climbing 0x02BEE0F8, horse 0x02BD2A44, Master Cycle 0x02BDFB20, conversation 0x02BCB3A0;
-  9 shield surf 0x02BE8B30, sand seal 0x02BF5ACC, waterfall 0x02BF8F88, Magnesis 0x020D72D0 (+ 0x02BF02A8,
+8 Climbing 0x02BEE0F8 + conversation 0x02BCB3A0 (orbit_tick: angles), horse 0x02BD2A44 + Master Cycle 0x02BDFB20
+  (mount_tick: turn_eye) — DONE (user play-tested; only issue was map zoom, below). The conversation camera feeds
+  with gameplay=false (it does not count as "in gameplay", so mouse buttons stay inert in dialogs).
+  Map wheel zoom (added with phase 8): `runtime/src/game/pc_ui.cpp` (MPL) hooks the world map screen update
+  0x02F033E0 (Zelda-on-PC PCE_MapObj) -> `pce_map_screen()`; while it is shown the wheel holds the right stick
+  up/down ~167 ms per notch (max 4) instead of the category flick. Input log prints "world map shown/gone".
+  Verified by the user ("yes it works").
+9 Other camera modes (Opus) — NEXT after 8. Hooks + HLE behaviour per docs/pc_hooks.md and Zelda-on-PC
+  PCInput.cpp HLE_Surf* / HLE_Magnet* (~lines 760–1030); give each camera a feed() call:
+  shield surf 0x02BE8B30, sand seal 0x02BF5ACC, waterfall 0x02BF8F88, Magnesis 0x020D72D0 (+ 0x02BF02A8,
   0x02BD8AB8, 0x020D6DB0). Main camera already drops pending mouse motion when another camera runs.
 10 Motion shrines (Sonnet): TiltMode/TiltLevel (bindings exist, marked "not yet").
 11 Mouse in menus (Opus): port [BotWPCE_UI] hooks + PCMenus/PCUI; Journal shortcut; context prompts; replaces
