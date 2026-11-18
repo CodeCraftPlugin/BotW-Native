@@ -3,10 +3,11 @@
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
 prompts, mouse menus) into this BotW-Native checkout.
 
-**Where we are (2026-11-19):** phases 0–10 + map wheel zoom are done, play-tested, committed and pushed
-(tilt-maze shrine not reached yet). Phase 11 (mouse in menus, action ring keys, Sort = C in menus, F1 Keys tab)
-is built and committed (not pushed); the second play-test was started but no result reported yet. Next session:
-ask how the play-test went (checklist in the phase 11 entry), then fix / push.
+**Where we are (2026-11-20):** phases 0–10 + map wheel zoom done and pushed. Phase 11 pushed; second play-test:
+Keys tab works (user: "yes it does"). Follow-ups built and committed (not pushed, NOT play-tested yet): F1 Keys tab
+wider name column + mouse wheel scrolls the F1 menu; Esc = new action "System" (in play opens the pause menu on the
+System page, elsewhere B). Next session: ask how those tested (and the rest of the phase 11 checklist: menu
+hover/click/right click, Sort = C, action ring keys), then fix / push.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -150,6 +151,11 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   the interim menu rules (mouse buttons inert, wheel = category flick); action ring. Keep the map wheel zoom
   (pc_ui.cpp) working. Zelda-on-PC: PCUI.cpp (HLE_UIScreen/UIText, ScreenVisible), PCMenus.cpp (map: wheel zoom,
   drag; inventory clicks), PCGraphics.cpp lines ~600–740 (the [BotWPCE_UI] patch list).
+  Follow-ups (2026-11-20, built, untested): `cemu_shims/overlay_menu.cpp` Keys tab label 235/value 145 (ui units);
+  `menu::wheel()/take_wheel()` (host/menu.cpp) fed from window.cpp while `menu::is_open()` -> ImGui AddMouseWheelEvent.
+  Esc: action "System" (Journal kind, default Escape; Back now Backspace only; loading an ini without a System line
+  removes Escape from Back). pc_menus update_pages: system_key + in_play (pce_gameplay_camera) and no inventory/
+  title/dialog/choice/map -> request_page(System) + PLUS pulse, else B pulse. Log "pc menus: system key (...)".
   Still untested from phase 5: bow selector (2) and arrow wheel while aiming (ask whether the user has a bow now).
 12 Settings screen (Sonnet): mouse sensitivity/invert in the F1 overlay menu (bindings: Keys tab, done in 11).
 
