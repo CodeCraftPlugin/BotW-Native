@@ -3,10 +3,8 @@
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
 prompts, mouse menus) into this BotW-Native checkout.
 
-**Where we are (2026-11-19):** phases 0–9 + map wheel zoom are done, play-tested, committed and pushed. Phase 10
-(Motion Control) is built and committed locally but NOT play-tested and NOT pushed: the user launched it but has
-not reported back yet. Start a new chat by asking how Motion Control went (checks: bow/scope + T + mouse moves the
-aim via gyro; a tilt-maze shrine; camera/scope/weapon wheel normal after T again). Then push, then phase 11.
+**Where we are (2026-11-19):** phases 0–10 + map wheel zoom are done, play-tested, committed and pushed
+(tilt-maze shrine not reached yet). Phase 11 (mouse in menus) is in progress.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -122,7 +120,9 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   lead 0x02BD8AB8, distance fix 0x020D6DB0; follow speed 360 deg/s / 40 m/s like Zelda-on-PC) — DONE (user: "all working
   fine"; camera log verified too). magnet_active() = Magnesis action ticked <100 ms ago (the lock-on hook then skips). All player
   cameras now have mouse support; the phase-1 "timestamp only" entry hooks are gone.
-10 Motion Control — BUILT, awaiting play-test. T toggles (tilt_toggle=0: hold); the mouse tilts a virtual
+10 Motion Control — DONE (user: scope + T, mouse up/down tilts and the wheel turns the view; a tilt-maze shrine
+  not reached yet, test it when the user gets there). Mouse left/right = sideways roll, which aiming ignores (same
+  as Zelda-on-PC; the user was told, kept as is). T toggles (tilt_toggle=0: hold); the mouse tilts a virtual
   GamePad, wheel = turn flat (15 deg/notch), middle click = level (Scope is suppressed for that key while on).
   `runtime/src/input/pc_tilt.{h,cpp}` (MPL) = Zelda-on-PC's pose logic (world_rotation, level_by, spring follow);
   `input::virtual_motion()` in motion.cpp runs the pose through its own copy of the Mahony fusion (bias learning
