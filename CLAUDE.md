@@ -4,7 +4,9 @@ Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard acti
 prompts, mouse menus) into this BotW-Native checkout.
 
 **Where we are (2026-11-19):** phases 0–10 + map wheel zoom are done, play-tested, committed and pushed
-(tilt-maze shrine not reached yet). Phase 11 (mouse in menus) is in progress.
+(tilt-maze shrine not reached yet). Phase 11 (mouse in menus, action ring keys, Sort = C in menus, F1 Keys tab)
+is built and committed (not pushed); the second play-test was started but no result reported yet. Next session:
+ask how the play-test went (checklist in the phase 11 entry), then fix / push.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -85,8 +87,16 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   U+E040.. mapped to the bound keys, plus the grown RSTB entry, into `%APPDATA%\BotWRecomp\pc_prompts\`;
   served ahead of mods by `mods::set_private_override()` (coreinit/mods.cpp) — deliberately NOT the mods
   folder, so the shared v0.1.2 release does not load it. Cached by a stamp file.
-- `runtime/src/game/pc_ui.cpp` (MPL) — start of the [BotWPCE_UI] port: world map screen hook 0x02F033E0 ->
-  `pce_map_screen()` (map wheel zoom). Phase 11 adds the other UI hooks here.
+- `runtime/src/game/pc_ui.{h,cpp}` (MPL) — the [BotWPCE_UI] port (phase 11): text/screen/map/cursor/list/carousel
+  hooks (table in docs/pc_hooks.md), UI state (inventory, map, title, dialog, choice...), pointer snapshot (walk of
+  the shown layouts: hit areas, tabs, box cursor, map scroll), focus requests to the game's cursor manager, menu
+  prompt re-targeting (A = left click, B = Esc, map/inventory hints = wheel), `pce_map_screen()`.
+- `runtime/src/input/pc_menus.{h,cpp}` (MPL) — port of PCMenus.cpp, called from pc_controls `frame()` per game read:
+  hover selects, click confirms, right click = B, inventory tab click (game's page jump) / page arrows / wheel
+  pages / Link drag-rotate, map drag pan + click (cursor to spot, A) + wheel zoom, J = adventure log (J again
+  closes), I/Tab always opens on the inventory. While a menu has the pointer, `mouse::set_pointer_mode()` releases
+  the capture (cursor shown, warped to centre) and mouse buttons/wheel go only to the menus. Log (INPUT_LOG):
+  "pc menus: pointer on/off (...) screens=[...]", "mouse: pointer (menu)".
 - `runtime/src/input/pc_tilt.{h,cpp}` (MPL) — Motion Control pose (phase 10); `input/motion.cpp`
   `virtual_motion()` turns it into VPAD motion through its own fusion; `pad_hle.cpp` prefers it while reported.
 - Also touched: `host/window.cpp` (mouse events, pc_controls apply/keys/F1, manual stick), `input/pad_hle.cpp`
@@ -130,12 +140,18 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   alone (feed() returns), selectors are off, mouse buttons work even outside a known camera. Off: levels at
   400 deg/s, then hands motion back. Settings tilt_* in pc_controls.ini (defaults used when the keys are missing;
   existing user files do not have them). Log: "pc controls: motion control on/off".
-11 Mouse in menus (Opus): port [BotWPCE_UI] hooks + PCMenus/PCUI; Journal shortcut; context prompts; replaces
+11 Mouse in menus — BUILT, first play-test found: Sort (Y) unreachable (fixed: Crouch key = Y while a menu has the
+  pointer, prompt shows it) and the action ring (fixed: pc_ui hides DoCommand_00's Nt_KeyTex*/T_?_00 panes, the
+  ImGui overlay draws the bound key, `pceui::hud_keys()`). Keys tab added to the F1 menu (phase 12's binding part:
+  Enter = listen, Left/Right = first/second key, Esc cancel, Delete clear, Reset row; saved to pc_controls.ini at
+  once; prompt glyphs in the font update after a restart). Rebuilt, waiting for the second play-test.
+  Not ported: gameplay context prompts (Drop/Throw...), save/load macros, F2 GamePad view pointer mapping.
+  Original plan: port [BotWPCE_UI] hooks + PCMenus/PCUI; Journal shortcut; context prompts; replaces
   the interim menu rules (mouse buttons inert, wheel = category flick); action ring. Keep the map wheel zoom
   (pc_ui.cpp) working. Zelda-on-PC: PCUI.cpp (HLE_UIScreen/UIText, ScreenVisible), PCMenus.cpp (map: wheel zoom,
   drag; inventory clicks), PCGraphics.cpp lines ~600–740 (the [BotWPCE_UI] patch list).
   Still untested from phase 5: bow selector (2) and arrow wheel while aiming (ask whether the user has a bow now).
-12 Settings screen (Sonnet): mouse sensitivity/invert + bindings in the F1 overlay menu.
+12 Settings screen (Sonnet): mouse sensitivity/invert in the F1 overlay menu (bindings: Keys tab, done in 11).
 
 ## Known issues not caused by the port (don't chase without being asked)
 - Title-screen "Continue" menu stalls ~1.4–2 s when opened: same with PC prompts on and off (A/B checked).
