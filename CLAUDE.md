@@ -5,9 +5,14 @@ prompts, mouse menus) into this BotW-Native checkout. Phases 0–6 are done (see
 next up is phase 7.
 
 ## Paths
-- This repo: `D:\Compiling\BotW-Native` (clone of ryderclanky/BotW-Native, v0.1.2 `c24309b`).
-  **All port work is uncommitted** on `main` (the user has not asked for a commit yet). `BotWRecomp/` in the
-  repo root is a stray user folder from shell launches without APPDATA; leave it alone.
+- This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
+  Remotes: `origin` = the user's fork CodeCraftPlugin/BotW-Native, `upstream` = ryderclanky (push disabled).
+  Work branch `pc-controls` (tracks origin/pc-controls); `main` stays equal to upstream. Two commits so far:
+  the port (38485b2) and a local-notes commit (CLAUDE.md + tools/pce) to leave out of any PR to upstream.
+  Commit/push only when the user asks. PR later: `gh pr create --repo ryderclanky/BotW-Native --base main
+  --head CodeCraftPlugin:<branch>` from a branch without the notes commit. Update: `git fetch upstream` +
+  `git rebase upstream/main`. `BotWRecomp/` in the repo root is a stray user folder from shell launches
+  without APPDATA (excluded in .git/info/exclude); leave it alone.
 - Reference: https://github.com/mircea32000/Zelda-on-PC (MPL-2.0, Cemu fork). Port source is
   `src/pcedition/` (PCInput.cpp ~2.7k lines, PCCamera, PCPrompts, PCMenus, PCUI, PCKeys, PCGraphics.cpp holds the
   asm patches `[BotWPCE_MouseCamera]` / `[BotWPCE_UI]`). A sparse clone may exist in an old session scratchpad;
