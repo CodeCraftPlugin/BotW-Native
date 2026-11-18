@@ -155,7 +155,9 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   removes Escape from Back). pc_menus update_pages: system_key + in_play (pce_gameplay_camera) and no inventory/
   title/dialog/choice/map -> request_page(System) + PLUS pulse, else B pulse. Log "pc menus: system key (...)".
   Still untested from phase 5: bow selector (2) and arrow wheel while aiming (ask whether the user has a bow now).
-12 Settings screen (Sonnet): mouse sensitivity/invert in the F1 overlay menu (bindings: Keys tab, done in 11).
+12 Settings screen — DONE (user: "works"): host/menu.cpp Controls tab rows Mouse camera, Mouse sensitivity (0.1–10,
+  step 0.1), Mouse vertical speed / Mouse aiming speed (0.1–3x), Invert mouse X/Y; apply at once (pc_camera reads
+  settings::get() every frame), saved to settings.ini.
 
 ## Known issues not caused by the port (don't chase without being asked)
 - Title-screen "Continue" menu stalls ~1.4–2 s when opened: same with PC prompts on and off (A/B checked).
