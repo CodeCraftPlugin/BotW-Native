@@ -1,8 +1,8 @@
 # BotW-Native + Zelda-on-PC keyboard/mouse port
 
 Goal: port Zelda-on-PC's mouse/keyboard support (1:1 mouse camera, keyboard actions, PC key
-prompts, mouse menus) into this BotW-Native checkout. Phases 0–6 are done (see the status list at the bottom);
-next up is phase 7.
+prompts, mouse menus) into this BotW-Native checkout. Phases 0–7 are done (see the status list at the bottom);
+next up is phase 8. Phase 7 is not committed yet.
 
 ## Paths
 - This repo: `D:\Compiling\BotW-Native`, based on ryderclanky/BotW-Native v0.1.2 `c24309b`.
@@ -64,8 +64,8 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
 ## Port: files and what they do
 - `runtime/src/game/pc_camera.cpp` — main camera mouse (yaw 0x02B9C950; pitch via the game's own mapping
   0x02B96758 at 0x02B9C120, added at 0x02B9C188/0x02B9C1AC), stick suppression while a selector is open
-  (0x02B9C950, 0x02B9C184), entry tick hooks of the other 10 cameras (only timestamps so far; phases 7–9 add
-  their rotation there), `pce_gameplay_camera()`, `pce_bow_camera()`.
+  (0x02B9C950, 0x02B9C184), aim/camera-rune/lock-on mouse (phase 7), entry tick hooks of the
+  remaining cameras (only timestamps so far; phases 8–9 add their rotation there), `pce_gameplay_camera()`, `pce_bow_camera()`.
 - `runtime/src/input/mouse.{h,cpp}` — SDL3 relative-mode capture (focused, no F1 menu / on-screen keyboard),
   `take()` motion (camera), `take_wheel()`/`take_pressed()` (bindings), manual-mode stick nudge (0.0062 for
   120 ms after mouse motion so the game stays in manual camera mode).
@@ -81,7 +81,7 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   served ahead of mods by `mods::set_private_override()` (coreinit/mods.cpp) — deliberately NOT the mods
   folder, so the shared v0.1.2 release does not load it. Cached by a stamp file.
 - Also touched: `host/window.cpp` (mouse events, pc_controls apply/keys/F1, manual stick), `input/pad_hle.cpp`
-  (frame()), `settings.{h,cpp}` (mouse_camera, mouse_sens, mouse_sens_y, mouse_invert_x/y in settings.ini; logs
+  (frame()), `settings.{h,cpp}` (mouse_camera, mouse_sens, mouse_sens_y, mouse_sens_aim, mouse_invert_x/y in settings.ini; logs
   frame-rate changes), `main.cpp` (pcprompts::prepare after mods::init), `coreinit/fs.cpp` (FS log),
   `CMakeLists.txt` (font copy + install), `docs/pc_hooks.md` (full address map of the camera patches).
 
@@ -95,9 +95,12 @@ in Bash. Scripts in `tools/pce/` (all set BOTW_USER_ROOT explicitly):
   NOT yet tested (user has no bow yet). Journal (J) -> phase 11, Tilt (T) -> phase 10.
 6 Key prompts — DONE except the A/X/Y/B action ring around actions ("A Take"): still Wii U letters, probably
   layout images, not font -> look at it in phase 11 with the UI hooks. Inventory wheel = categories verified.
-7–9 Other camera modes in 3 batches (Opus) — NEXT. Hooks + HLE behaviour per docs/pc_hooks.md and Zelda-on-PC
-  PCInput.cpp HLE_*CamTick / HLE_Aim* / HLE_Surf* / HLE_Magnet* (~lines 480–1060). Suggested batches:
-  7 aim cameras (scope/bow 0x02B9250C, rune aim 0x02B94E30) + lock-on 0x02BF0234 + camera rune 0x02BCED3C;
+7 Aim cameras + lock-on + camera rune — DONE (user: "everything seems to work"): scope/bow (0x02B9250C,
+  0x02B92848, 0x02B92A48), rune aim (0x02B94E30, 0x02B95278, 0x02B956B0), camera rune (0x02BCED3C, 0x02BCF698),
+  lock-on (0x02BF0234, skipped while Magnesis 0x020D72D0 ticked <50 ms ago). Every camera with mouse support calls
+  `feed()` at its entry (pc_camera.cpp); new settings.ini key mouse_sens_aim=0.8 (zoomed cameras).
+8–9 Other camera modes (Opus) — NEXT. Hooks + HLE behaviour per docs/pc_hooks.md and Zelda-on-PC
+  PCInput.cpp HLE_*CamTick / HLE_Surf* / HLE_Magnet* (~lines 480–1060); give each camera a feed() call. Batches:
   8 climbing 0x02BEE0F8, horse 0x02BD2A44, Master Cycle 0x02BDFB20, conversation 0x02BCB3A0;
   9 shield surf 0x02BE8B30, sand seal 0x02BF5ACC, waterfall 0x02BF8F88, Magnesis 0x020D72D0 (+ 0x02BF02A8,
   0x02BD8AB8, 0x020D6DB0). Main camera already drops pending mouse motion when another camera runs.
